@@ -256,6 +256,22 @@ public class XMLData {
         return category;
     }
 
+    static boolean saveAllData(Context context, List<Category> out_data){
+        boolean ok = true;
+        for (int i = 0; i < out_data.size(); i++) {
+            if(!out_data.get(i).actual){
+                ok &= putXMLMetaData(context, out_data);
+                break;
+            }
+        }
+        for (int i = 0; i < out_data.size(); i++) {
+            if(!out_data.get(i).actual)
+                ok &= putXMLFileData(context,out_data.get(i),out_data.get(i).prev_index_file);
+        }
+        return ok;
+    }
+
+
 }
 //            File[] files_arr = files_dir.listFiles();
 //            for (int i = 0; i < files_arr.length; i++) {

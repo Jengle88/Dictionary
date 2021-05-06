@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     List<XMLData.Category> full_data;
     final int CHECK_STORAGE_PERMISSION = 1;
     final int CHECK_FILE_CHOSEN = 1;
-
+    boolean startAnotherActivity = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,12 +99,14 @@ public class MainActivity extends AppCompatActivity {
                     full_data.set(groupPosition, XMLData.getXMLFileData(getApplicationContext(), groupPosition));
                 }
                 if (full_data.get(groupPosition).materials.get(childPosition).text != null) {
+                    startAnotherActivity = true;
                     Intent intent = new Intent(MainActivity.this, MaterialActivity.class);
                     intent.putExtra("category", listDataHeader.get(groupPosition));
                     intent.putExtra("material_title", full_data.get(groupPosition).materials.get(childPosition).title);
                     intent.putExtra("material_text", full_data.get(groupPosition).materials.get(childPosition).text);
                     intent.putExtra("material_cnt_right", full_data.get(groupPosition).materials.get(childPosition).cnt_right);
                     intent.putExtra("material_cnt_wrong", full_data.get(groupPosition).materials.get(childPosition).cnt_wrong);
+                    Log.i("my_logs_start_activity", "Start repeat Activity");
                     startActivity(intent);
                 } else {
                     Toast.makeText(MainActivity.this, "Не удалось загрузить информацию", Toast.LENGTH_LONG).show();
@@ -172,6 +174,19 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
+    protected void onStop() {
+        if(!startAnotherActivity){
+            Log.i("my_logs_stop", "Stop application");
+            XMLData.saveAllData(this,full_data);
+        }
+        else{
+            Log.i("my_logs_stop", "Just another Activity");
+            startAnotherActivity = false;
+        }
+        super.onStop();
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         if (requestCode == CHECK_STORAGE_PERMISSION && grantResults.length == 1) {
@@ -232,11 +247,11 @@ public class MainActivity extends AppCompatActivity {
                             full_data.get(idx_category).actual = false;
                             Log.i("my_logs_cnt_data", "full_data with category " + full_data.get(idx_category).category +
                                     " have " + full_data.get(idx_category).materials.size() + " materials");
-                            XMLData.putXMLFileData(this, full_data.get(idx_category), idx_category);
+                            //XMLData.putXMLFileData(this, full_data.get(idx_category), idx_category);
                         }
                         listAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild);
                         expListView.setAdapter(listAdapter);//Настраиваем listAdapter
-                        XMLData.putXMLMetaData(this, full_data);
+                        //XMLData.putXMLMetaData(this, full_data);
                         Log.i("my_logs_menu", "Materials have added");
                     } catch (Exception e) {
                         Toast.makeText(MainActivity.this, "Возникла ошибка", Toast.LENGTH_LONG).show();
@@ -268,12 +283,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.add_materials) {
             Log.i("my_logs_menu", "add_materials pressed");
+            startAnotherActivity = true;
             Intent intent = new Intent();
             intent.setType("text/xml");
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(intent, CHECK_FILE_CHOSEN);
-
         } else if (item.getItemId() == R.id.add_group) {
             Log.i("my_logs_menu", "add_group pressed");
             LayoutInflater li = LayoutInflater.from(this);
