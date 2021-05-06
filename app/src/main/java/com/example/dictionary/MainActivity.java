@@ -30,6 +30,15 @@ import java.util.HashMap;
 import java.util.List;
 
 
+/*
+* TODO:
+*   1)Сделать обработчик кнопки сброса
+*   2)Сделать меню выбора тренировки, удаления элементов и перемещения title
+*   3)Сделать layout для тренировки
+*
+* */
+
+
 public class MainActivity extends AppCompatActivity {
 
     /* Checks if external storage is available for read and write */

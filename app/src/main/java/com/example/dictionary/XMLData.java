@@ -73,6 +73,10 @@ public class XMLData {
             this.cnt_right = cnt_right;
             this.cnt_wrong = cnt_wrong;
         }
+
+        public Material(){
+
+        }
     }
 
 
@@ -126,12 +130,19 @@ public class XMLData {
                 if(out_data.materials.get(i).title == null || out_data.materials.get(i).text == null){
                     Log.e("my_logs_save_material", "Something Null");
                 }
-                outputStream.write(("<material\n" +
-                        "title=\"" + out_data.materials.get(i).title + "\"\n" +
-                        "text=\"" + out_data.materials.get(i).text + "\"\n" +
-                        "cnt_right=\"" + out_data.materials.get(i).cnt_right + "\"\n" +
-                        "cnt_wrong=\"" + out_data.materials.get(i).cnt_wrong + "\"\n" +
-                        "/>\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.write("<material>\n".getBytes(StandardCharsets.UTF_8));
+//                outputStream.write(("<material\n" +
+//                        "title=\"" + out_data.materials.get(i).title + "\"\n" +
+//                        "text=\"" + out_data.materials.get(i).text + "\"\n" +
+//                        "cnt_right=\"" + out_data.materials.get(i).cnt_right + "\"\n" +
+//                        "cnt_wrong=\"" + out_data.materials.get(i).cnt_wrong + "\"\n" +
+//                        "/>\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.write(("<title>" + out_data.materials.get(i).title + "</title>\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.write(("<text>" + out_data.materials.get(i).text + "</text>\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.write(("<cnt_right>" + out_data.materials.get(i).cnt_right + "</cnt_right>\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.write(("<cnt_wrong>" + out_data.materials.get(i).cnt_wrong + "</cnt_wrong>\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.write("</material>\n".getBytes(StandardCharsets.UTF_8));
+
             }
             outputStream.write("</filedata>\n".getBytes(StandardCharsets.UTF_8));
             outputStream.close();
@@ -158,14 +169,37 @@ public class XMLData {
                 } else if (parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("material")) {
                     if (cat_list.isEmpty())
                         throw new FormatException("Haven`t found category!");
-                    if (parser.getAttributeCount() == 2 && parser.getAttributeName(0).equals("title") &&
-                            parser.getAttributeName(1).equals("text")) {
-                        cat_list.get(cat_list.size() - 1).materials.add(
-                                new Material(parser.getAttributeValue(0), parser.getAttributeValue(1), 0, 0));
-                    } else {
+                    parser.next();
+                    parser.next();
+                    Material material = new Material();
+                    if(parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("title")){
+                        parser.next();
+                        material.title = parser.getText();
+                        parser.next();
+                    } else{
                         throw new FormatException("Invalid format material!");
-
                     }
+                    parser.next();
+                    parser.next();
+                    if(parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("text")){
+                        parser.next();
+                        material.text = parser.getText();
+                        parser.next();
+                    } else{
+                        throw new FormatException("Invalid format material!");
+                    }
+                    material.cnt_right = 0;
+                    material.cnt_wrong = 0;
+                    cat_list.get(cat_list.size() - 1).materials.add(material);
+                    parser.next();
+//                    if (parser.getAttributeCount() == 2 && parser.getAttributeName(0).equals("title") &&
+//                            parser.getAttributeName(1).equals("text")) {
+//                        cat_list.get(cat_list.size() - 1).materials.add(
+//                                new Material(parser.getAttributeValue(0), parser.getAttributeValue(1), 0, 0));
+//                    } else {
+//                        throw new FormatException("Invalid format material!");
+//
+//                    }
                 } else if (parser.getEventType() == XmlPullParser.START_TAG && !parser.getName().equals("dictionary")) {
                     throw new FormatException("Unknown tag!");
                 }
@@ -228,21 +262,59 @@ public class XMLData {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             XmlPullParser parser = factory.newPullParser();
             parser.setInput(inpstream);
-
             while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
                 if (parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("category")) {
                     parser.next();
                     category.category = parser.getText();
                     parser.next();
                 } else if (parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("material")) {
-                    if (parser.getAttributeCount() == 4) {
-                        category.materials.add(new Material(parser.getAttributeValue(0),
-                                parser.getAttributeValue(1),
-                                Integer.parseInt(parser.getAttributeValue(2)),
-                                Integer.parseInt(parser.getAttributeValue(3))));
-                    } else {
-                        throw new FormatException("Bad data!");
+                    Material material = new Material();
+                    parser.next();
+                    parser.next();
+                    if(parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("title")){
+                        parser.next();
+                        material.title = parser.getText();
+                        parser.next();
+                    } else{
+                        throw new FormatException("Invalid format material!");
                     }
+                    parser.next();
+                    parser.next();
+                    if(parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("text")){
+                        parser.next();
+                        material.text = parser.getText();
+                        parser.next();
+                    } else{
+                        throw new FormatException("Invalid format material!");
+                    }
+                    parser.next();
+                    parser.next();
+                    if(parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("cnt_right")){
+                        parser.next();
+                        material.cnt_right = Integer.parseInt(parser.getText());
+                        parser.next();
+                    } else{
+                        throw new FormatException("Invalid format material!");
+                    }
+                    parser.next();
+                    parser.next();
+                    if(parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("cnt_wrong")){
+                        parser.next();
+                        material.cnt_wrong = Integer.parseInt(parser.getText());
+                        parser.next();
+                    } else{
+                        throw new FormatException("Invalid format material!");
+                    }
+                    category.materials.add(material);
+                    parser.next();
+//                    if (parser.getAttributeCount() == 4) {
+//                        category.materials.add(new Material(parser.getAttributeValue(0),
+//                                parser.getAttributeValue(1),
+//                                Integer.parseInt(parser.getAttributeValue(2)),
+//                                Integer.parseInt(parser.getAttributeValue(3))));
+//                    } else {
+//                        throw new FormatException("Bad data!");
+//                    }
                 }
                 parser.next();
             }
