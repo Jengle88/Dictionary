@@ -22,24 +22,24 @@ public class XMLData {
         boolean actual = true;
         List<Material> materials;
 
-        public Category(String category_name, int index_file) {
+        public Category(String category_name, int index_file, boolean actual) {
             this.category = category_name;
             this.materials = new ArrayList<Material>();
             this.prev_index_file = index_file;
-            this.actual = true;
+            this.actual = actual;
         }
 
-        public Category(String category_name, List<Material> material, int index_file) {
+        public Category(String category_name, List<Material> material, int index_file, boolean actual) {
             this.category = category_name;
             this.materials = material;
             this.prev_index_file = index_file;
-            this.actual = true;
+            this.actual = actual;
         }
 
-        public Category(String category_name) {
+        public Category(String category_name, boolean actual) {
             this.category = category_name;
             this.materials = new ArrayList<Material>();
-            this.actual = true;
+            this.actual = actual;
         }
 
         public Category() {
@@ -164,7 +164,7 @@ public class XMLData {
             while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
                 if (parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("category")) {
                     parser.next();
-                    cat_list.add(new Category(parser.getText()));
+                    cat_list.add(new Category(parser.getText(), false));
                     parser.next();
                 } else if (parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("material")) {
                     if (cat_list.isEmpty())
@@ -229,7 +229,7 @@ public class XMLData {
             while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
                 if (parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("category")) {
                     parser.next();
-                    list_data.add(new Category(parser.getText(), index_file++));
+                    list_data.add(new Category(parser.getText(), index_file++, true));
                     parser.next();
                 } else if (parser.getEventType() == XmlPullParser.START_TAG && parser.getName().equals("title")) {
                     if (list_data.isEmpty())
@@ -337,8 +337,10 @@ public class XMLData {
             }
         }
         for (int i = 0; i < out_data.size(); i++) {
-            if(!out_data.get(i).actual)
+            if(!out_data.get(i).actual){
                 ok &= putXMLFileData(context,out_data.get(i),out_data.get(i).prev_index_file);
+                out_data.get(i).actual = true;
+            }
         }
         return ok;
     }

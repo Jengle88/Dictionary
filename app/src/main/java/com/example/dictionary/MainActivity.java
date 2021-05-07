@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
 //        File file = new File(this.getFilesDir() + "/metadata.xml");
 //        File file1 = new File(this.getFilesDir() + "/0.xml");
 //        File file2 = new File(this.getFilesDir() + "/1.xml");
+//        File file3 = new File(this.getFilesDir() + "/2.xml");
 //
 //        if(file.exists())
 //            file.delete();
@@ -93,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
 //            file1.delete();
 //        if(file2.exists())
 //            file2.delete();
+//        if(file3.exists())
+//            file3.delete();
 
         expListView = (ExpandableListView) findViewById(R.id.group_items);//Связываемся с нашим ExpandableListView
         prepareListData();//Подготавливаем список данных
@@ -121,14 +124,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Не удалось загрузить информацию", Toast.LENGTH_LONG).show();
                     Log.e("my_logs_chosen_title", "Could not find file");
                 }
-//                                Toast.makeText(
-//                        getApplicationContext(), "Короткое нажатие: " +
-//                                listDataHeader.get(groupPosition)
-//                                + " : "
-//                                + listDataChild.get(
-//                                listDataHeader.get(groupPosition)).get(
-//                                childPosition), Toast.LENGTH_SHORT)
-//                        .show();
                 return false;
             }
         });
@@ -163,23 +158,6 @@ public class MainActivity extends AppCompatActivity {
 
         });
     }
-
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        if(isFinishing())
-//        {
-//            XMLData.putXMLMetaData(this,full_data);
-//            for (int i = 0; i < full_data.size(); i++) {
-//                if(!full_data.get(i).actual){
-//                    XMLData.putXMLFileData(this, full_data.get(i),i);
-//                    full_data.get(i).actual = true;
-//                }
-//            }
-//        }
-//
-//    }
-//
 
 
     @Override
@@ -248,12 +226,12 @@ public class MainActivity extends AppCompatActivity {
                                 temp.addAll(titles);
                                 listDataChild.put(category, temp);
                                 full_data.get(idx_category).materials.addAll(categories_list.get(i).materials);
+                                full_data.get(idx_category).actual = false;
                             } else {
                                 listDataChild.put(category, titles);
-                                full_data.add(new XMLData.Category(category, categories_list.get(i).materials, full_data.size()));
+                                full_data.add(new XMLData.Category(category, categories_list.get(i).materials, full_data.size(), false));
                                 full_data.get(idx_category).prev_index_file = idx_category;
                             }
-                            full_data.get(idx_category).actual = false;
                             Log.i("my_logs_cnt_data", "full_data with category " + full_data.get(idx_category).category +
                                     " have " + full_data.get(idx_category).materials.size() + " materials");
                             //XMLData.putXMLFileData(this, full_data.get(idx_category), idx_category);
@@ -305,14 +283,13 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
             alert.setTitle("Название раздела");
             alert.setView(alertView);
-
             final EditText input = alertView.findViewById(R.id.input_text);
 
             alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     String value = String.valueOf(input.getText());
                     if (!listDataChild.containsKey(value)) {
-                        full_data.add(new XMLData.Category(value, full_data.size()));
+                        full_data.add(new XMLData.Category(value, full_data.size(), false));
                         Log.i("my_logs_groups", "Group have been added");
                         listDataHeader.add(value);
                         listDataChild.put(value, new ArrayList<String>());
@@ -324,13 +301,20 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             alert.show();
-
-        } else if (item.getItemId() == R.id.add_music) {
-            Log.i("my_logs_menu", "add_music pressed");
-            //TODO
-        } else if (item.getItemId() == R.id.play_music) {
-            Log.i("my_logs_menu", "play_music pressed");
-            //TODO
+        } else if(item.getItemId() == R.id.support){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Справка о загрузке материалов")
+                    .setMessage("Материалы загружаются с использованием XML-файлов\n" +
+                            "Иерархия тегов:\n" +
+                            "<dictionary> - начало" +
+                            "   <category>Название</category>\n" +
+                            "   <material>\n" +
+                            "       <title>Заголовок1</title>\n" +
+                            "       <text>Текст1</text>\n" +
+                            "   </material>\n" +
+                            "</dictionary> - конец\n" +
+                            "В одной категории может быть несколько материалов");
+            builder.show();
         }
         return super.onOptionsItemSelected(item);
     }

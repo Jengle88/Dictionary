@@ -2,94 +2,106 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/RelativeL"
+    android:id="@+id/MaterialLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:scrollbarAlwaysDrawVerticalTrack="true"
+    android:scrollbars="vertical"
     tools:context=".MaterialActivity">
+    <!--    android:scrollIndicators="right"-->
+    <!--    android:scrollbarAlwaysDrawVerticalTrack="true"-->
+    <!--    android:scrollbars="vertical"-->
+    <!--    android:transcriptMode="alwaysScroll"-->
 
-
-
-    <TextView
-        android:id="@+id/material_title"
-        android:layout_width="450dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:layout_marginTop="15dp"
-        android:layout_centerHorizontal="true"
-        android:textStyle="bold"
-        android:textSize="20sp"
-        android:text="Здесь будет заголовок" />
-
-    <TextView
-        android:id="@+id/text_good_repeat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_alignStart="@id/material_title"
-        android:layout_below="@id/material_title"
-        android:textSize="16sp"
-        android:text="Успешных повторений: " />
-
-    <TextView
-        android:id="@+id/text_bad_repeat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_alignStart="@id/material_title"
-        android:layout_below="@id/text_good_repeat"
-        android:textSize="16sp"
-
-        android:text="Неудачных повторений: " />
-
-    <TextView
-        android:id="@+id/count_good_repeat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/material_title"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_toStartOf="@+id/reset_counts"
-        android:layout_toEndOf="@id/text_good_repeat"
-        android:singleLine="true"
-        android:textSize="16sp"
-        android:text="0" />
-
-    <TextView
-        android:id="@+id/count_bad_repeat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/count_good_repeat"
-        android:layout_alignStart="@id/count_good_repeat"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_toStartOf="@+id/reset_counts"
-        android:singleLine="true"
-        android:textSize="16sp"
-        android:text="0" />
-
-    <Button
-        android:id="@+id/reset_counts"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/material_text"
-        android:layout_below="@id/material_title"
-        android:layout_alignEnd="@+id/material_title"
-        android:layout_marginTop="10dp"
-        android:text="Сброс"
-        android:textSize="16sp" />
-
-    <TextView
-        android:id="@+id/material_text"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/count_bad_repeat"
-        android:layout_alignStart="@+id/material_title"
-        android:layout_alignEnd="@+id/material_title"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="15dp"
-        android:textSize="16sp"
-        android:text="Здесь будет текст" />
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/material_title"
+                android:layout_width="450dp"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginRight="15dp"
+                android:text="Здесь будет заголовок"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/text_good_repeat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/material_title"
+                android:layout_alignStart="@id/material_title"
+                android:layout_marginTop="10dp"
+                android:text="Успешных повторений: "
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/text_bad_repeat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/text_good_repeat"
+                android:layout_alignStart="@id/material_title"
+                android:layout_marginTop="10dp"
+                android:text="Неудачных повторений: "
+
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/count_good_repeat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/material_title"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_toStartOf="@+id/reset_counts"
+                android:layout_toEndOf="@id/text_good_repeat"
+                android:singleLine="true"
+                android:text="0"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/count_bad_repeat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/count_good_repeat"
+                android:layout_alignStart="@id/count_good_repeat"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_toStartOf="@+id/reset_counts"
+                android:singleLine="true"
+                android:text="0"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/reset_counts"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/material_text"
+                android:layout_below="@id/material_title"
+                android:layout_alignEnd="@+id/material_title"
+                android:layout_marginTop="10dp"
+                android:text="Сброс"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/material_text"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@+id/count_bad_repeat"
+                android:layout_alignStart="@+id/material_title"
+                android:layout_alignEnd="@+id/material_title"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="15dp"
+                android:text="Здесь будет текст"
+                android:textSize="16sp" />
+        </RelativeLayout>
+    </ScrollView>
 </RelativeLayout>

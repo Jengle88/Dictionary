@@ -1,7 +1,10 @@
 package com.example.dictionary;
 
+import android.text.Layout;
+import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -22,13 +25,12 @@ public class MaterialActivity extends AppCompatActivity {
         material_text.setText(getIntent().getStringExtra("material_text"));
         count_good_repeat.setText(String.valueOf(getIntent().getIntExtra("material_cnt_right",0)));
         count_bad_repeat.setText(String.valueOf(getIntent().getIntExtra("material_cnt_wrong",0)));
+
        //Toast.makeText(this, getIntent().getStringExtra("category"), Toast.LENGTH_LONG).show();
        //Toast.makeText(this, getIntent().getStringExtra("material"), Toast.LENGTH_LONG).show();
     }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.play_music) {
-        }
         return super.onOptionsItemSelected(item);
     }
 
