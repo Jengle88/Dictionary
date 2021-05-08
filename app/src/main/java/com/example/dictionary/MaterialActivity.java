@@ -27,6 +27,7 @@ public class MaterialActivity extends AppCompatActivity {
         countGoodRepeat.setText(String.valueOf(getIntent().getIntExtra("materialCntRight", 0)));
         countBadRepeat.setText(String.valueOf(getIntent().getIntExtra("materialCntWrong", 0)));
         Button resetButton = findViewById(R.id.resetCounts);
+        //Сбрасываем прогресс
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

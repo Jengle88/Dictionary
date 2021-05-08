@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Проверяем доступ к внешней памяти смартфона
         int permissionReadStatus = ContextCompat.
                 checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         if (permissionReadStatus == PackageManager.PERMISSION_GRANTED) {
@@ -60,34 +61,23 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, CHECK_STORAGE_PERMISSION);
         }
 
-//        File file = new File(this.getFilesDir() + "/metadata.xml");
-//        File file1 = new File(this.getFilesDir() + "/0.xml");
-//        File file2 = new File(this.getFilesDir() + "/1.xml");
-//        File file3 = new File(this.getFilesDir() + "/2.xml");
-//
-//        if(file.exists())
-//            file.delete();
-//        if(file1.exists())
-//            file1.delete();
-//        if(file2.exists())
-//            file2.delete();
-//        if(file3.exists())
-//            file3.delete();
-
-        expListView = findViewById(R.id.groupItems);//Связываемся с нашим ExpandableListView
-        prepareListData();//Подготавливаем список данных
+        //Первичная инициализация данных
+        expListView = findViewById(R.id.groupItems);
+        prepareListData();
         listAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild);
-        expListView.setAdapter(listAdapter);//Настраиваем listAdapter
+        expListView.setAdapter(listAdapter);
         appContext = this;
 
+        //Обрабатываем нажатия на материал
         expListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v,
                                         int groupPosition, int childPosition, long id) {
                 Log.i("my_logs_repeat", listDataHeader.get(groupPosition) + " repeated");
-                if (fullData.get(groupPosition).materials.get(childPosition).text == null) {
+                if (fullData.get(groupPosition).materials.get(childPosition).text == null) {//Выгружаем данные категории из файла
                     fullData.set(groupPosition, XMLData.getXMLFileData(getApplicationContext(), groupPosition, listDataChild.get(listDataHeader.get(groupPosition))));
                 }
+                //Если выгрузка была успешной
                 if (fullData.get(groupPosition).materials.get(childPosition).text != null) {
                     startAnotherActivity = true;
                     Intent intent = new Intent(MainActivity.this, MaterialActivity.class);
@@ -108,12 +98,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //Обрабатываем удержания на элементы списка
         expListView.setOnItemLongClickListener(new ExpandableListView.OnItemLongClickListener() {
-
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                //Если удержание было на материале
                 if (ExpandableListView.getPackedPositionType(id) == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
-                    //лонгклик был на child'е
                     int groupPosition = ExpandableListView.getPackedPositionGroup(id);
                     int childPosition = ExpandableListView.getPackedPositionChild(id);
                     LayoutInflater li = LayoutInflater.from(appContext);
@@ -128,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                             listDataChild.get(fullData.get(groupPosition).category).remove(childPosition);
                             fullData.get(groupPosition).actual = false;
                             listAdapter = new ExpandableListAdapter(appContext, listDataHeader, listDataChild);
-                            expListView.setAdapter(listAdapter);//Настраиваем listAdapter
+                            expListView.setAdapter(listAdapter);
                         }
                     });
                     alert.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
@@ -136,11 +126,12 @@ public class MainActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialog, int which) {
                         }
                     });
+                    //Окно выбора удаления файла
                     AlertDialog alertDialog = alert.create();
                     alertDialog.show();
                     return true;
                 } else {
-                    //лонгклик был на группе
+                    //Если удержание было на категории
                     int groupPosition = ExpandableListView.getPackedPositionGroup(id);
                     LayoutInflater li = LayoutInflater.from(appContext);
                     View alertView = li.inflate(R.layout.template_alert_dialog, null);
@@ -148,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
                     alert.setTitle("Что нужно сделать?");
                     alert.setView(alertView);
                     alert.setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
+                        //Удаляем категорию из памяти, а также запоминаем необходимость перестроить metadata
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             fullData.remove(groupPosition);
@@ -159,10 +151,16 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     alert.setNegativeButton("Тренировка", new DialogInterface.OnClickListener() {
+                        //Вызываем окно тренировки
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            if(fullData.get(groupPosition).materials.size() == 0){
+                                Toast.makeText(appContext, "Выбрана пустая категория", Toast.LENGTH_LONG).show();
+                                return;
+                            }
                             startAnotherActivity = true;
                             Intent intent = new Intent(MainActivity.this, TrainingActivity.class);
+                            //Загружаем данные, если их нет
                             if (fullData.get(groupPosition).materials.get(0).text == null)
                                 fullData.set(groupPosition, XMLData.getXMLFileData(appContext, groupPosition, listDataChild.get(listDataHeader.get(groupPosition))));
 
@@ -178,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
                             startActivityForResult(intent, OPEN_TRAINING);
                         }
                     });
-                    //Создаем AlertDialog:
+                    //Вызываем окно выбора действия(удалить или тренироваться)
                     AlertDialog alertDialog = alert.create();
                     alertDialog.show();
                     return true;
@@ -187,11 +185,28 @@ public class MainActivity extends AppCompatActivity {
 
         });
     }
+    //Подготавливаем данные для отображения
+    private void prepareListData() {
+        listDataHeader = new ArrayList<String>();
+        listDataChild = new HashMap<String, List<String>>();
+        fullData = XMLData.getXMLMetaData(this);//Получаем лишь список категорий и заголовков
+        if (fullData == null)
+            return;
+        for (int i = 0; i < fullData.size(); i++) {
+            listDataHeader.add(fullData.get(i).category);
+            List<String> materialTitle = new ArrayList<>(fullData.get(i).materials.size());
+            for (int j = 0; j < fullData.get(i).materials.size(); j++) {
+                materialTitle.add(fullData.get(i).materials.get(j).title);
+            }
+            listDataChild.put(listDataHeader.get(i), materialTitle);
+        }
+    }
 
     @Override
     protected void onStop() {
         if (!startAnotherActivity) {
             Log.i("my_logs_stop", "Stop application");
+            //Сохраняем все данные
             XMLData.saveAllData(this, fullData, categoryChange);
 
         } else {
@@ -222,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         switch (requestCode) {
-            case CHECK_FILE_CHOSEN:
+            case CHECK_FILE_CHOSEN://Был выбран файл для загрузки данных
                 if (resultCode == RESULT_OK && data != null && data.getData() != null) {
 
                     String filename = data.getData().getLastPathSegment();
@@ -279,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("my_logs_file", "Error with file");
                 }
                 break;
-            case OPEN_TEXT:
+            case OPEN_TEXT://Было выбрано открытие материала
                 if (resultCode == RESULT_OK && data != null) {
                     int categoryIndex = data.getIntExtra("categoryIndex", 0);
                     int materialIndex = data.getIntExtra("materialIndex", 0);
@@ -290,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("my_logs_result", "Data error");
                 }
                 break;
-            case OPEN_TRAINING:
+            case OPEN_TRAINING://Была выбрана тренировка
                 if (resultCode == RESULT_OK && data != null) {
                     int categoryIndex = data.getIntExtra("categoryIndex", -1);
                     ArrayList<Integer> cntRight = data.getIntegerArrayListExtra("cntRight");
@@ -305,25 +320,11 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void prepareListData() {
-        listDataHeader = new ArrayList<String>();
-        listDataChild = new HashMap<String, List<String>>();
-        fullData = XMLData.getXMLMetaData(this);
-        if (fullData == null)
-            return;
-        for (int i = 0; i < fullData.size(); i++) {
-            listDataHeader.add(fullData.get(i).category);
-            List<String> materialTitle = new ArrayList<>(fullData.get(i).materials.size());
-            for (int j = 0; j < fullData.get(i).materials.size(); j++) {
-                materialTitle.add(fullData.get(i).materials.get(j).title);
-            }
-            listDataChild.put(listDataHeader.get(i), materialTitle);
-        }
-    }
+
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.addMaterials) {
+        if (item.getItemId() == R.id.addMaterials) {//Открыть меню добавления данных из файла
             Log.i("my_logs_menu", "add_materials pressed");
             startAnotherActivity = true;
             Intent intent = new Intent();
@@ -331,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(intent, CHECK_FILE_CHOSEN);
-        } else if (item.getItemId() == R.id.addGroup) {
+        } else if (item.getItemId() == R.id.addCategory) {//Добавить категорию в конец списка
             Log.i("my_logs_menu", "add_group pressed");
             LayoutInflater li = LayoutInflater.from(this);
             View alertView = li.inflate(R.layout.typing_alert_dialog, null);
@@ -356,7 +357,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             alert.show();
-        } else if (item.getItemId() == R.id.support) {
+        } else if (item.getItemId() == R.id.support) {//Вызвать окно подсказки
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Справка о загрузке материалов")
                     .setMessage("1)Материалы загружаются с использованием XML-файлов\n\n" +

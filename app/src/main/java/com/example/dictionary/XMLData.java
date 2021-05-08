@@ -64,7 +64,7 @@ public class XMLData {
         public Material() {}
     }
 
-
+    //Сохранить метаинформацию (название категорий и заголовки)
     static boolean putXMLMetaData(Context context, List<Category> listOut) {
         String filepath = context.getFilesDir().toString() + "/metadata.xml";
         try {
@@ -104,6 +104,7 @@ public class XMLData {
         return true;
     }
 
+    //Сохранить информацию о категории
     static boolean putXMLFileData(Context context, Category outData, int index) {
         renameFile(context, String.valueOf(outData.prevIndexFile), String.valueOf(index));
         outData.prevIndexFile = index;
@@ -130,7 +131,7 @@ public class XMLData {
             }
             outputStream.write("</filedata>\n".getBytes(StandardCharsets.UTF_8));
             outputStream.close();
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             e.printStackTrace();
             Log.e("my_logs_put_xml_file", e.getMessage());
             return false;
@@ -139,6 +140,7 @@ public class XMLData {
         return true;
     }
 
+    //Парсинг файла, подаваемого пользователем
     static List<Category> getXMLUserData(InputStreamReader inpstr) {
         List<Category> categoryList = new ArrayList<>();
         try {
@@ -190,6 +192,7 @@ public class XMLData {
         return categoryList;
     }
 
+    //Парсинг файла с метаинформацией
     static List<Category> getXMLMetaData(Context context) {
         List<Category> listData = new ArrayList<>();
         String filepath = context.getFilesDir().toString();
@@ -225,6 +228,7 @@ public class XMLData {
         return listData;
     }
 
+    //Парсинг файла с информацией о категории
     static Category getXMLFileData(Context context, int prevIndexFile, List<String> actualTitles) {
         Category category = new Category();
         String filepath = context.getFilesDir().toString() + "/" + prevIndexFile + ".xml";
@@ -300,14 +304,16 @@ public class XMLData {
         return category;
     }
 
+    //Сохранить все данные
     static boolean saveAllData(Context context, List<Category> outData, boolean forceUpdate) {
         boolean ok = true;
         for (int i = 0; i < outData.size(); i++) {
-            if (!outData.get(i).actual || forceUpdate) {
+            if (!outData.get(i).actual || forceUpdate) {//Если метаинформация была изменена
                 ok &= putXMLMetaData(context, outData);
                 break;
             }
         }
+        //При необходимости содержимое файлов изменяется
         for (int i = 0; i < outData.size(); i++) {
             if (forceUpdate) {
                 XMLData.renameFile(context, String.valueOf(outData.get(i).prevIndexFile), String.valueOf(i));

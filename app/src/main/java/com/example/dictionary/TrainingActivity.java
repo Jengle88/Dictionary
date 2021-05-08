@@ -64,6 +64,7 @@ public class TrainingActivity extends AppCompatActivity {
         titleView = findViewById(R.id.trainTitle);
         textView = findViewById(R.id.trainText);
         actualIndex = 0;
+        //Успешно
         acceptButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,6 +73,7 @@ public class TrainingActivity extends AppCompatActivity {
                 previewData(actualIndex);
             }
         });
+        //Провалено
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -80,6 +82,7 @@ public class TrainingActivity extends AppCompatActivity {
                 previewData(actualIndex);
             }
         });
+        //ВЫзов подсказки
         checkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -91,7 +94,7 @@ public class TrainingActivity extends AppCompatActivity {
         });
         previewData(actualIndex);
     }
-
+    //Подготовка данных
     void previewData(int index) {
         titleView.setText(mixList.get(index).title);
         textView.setVisibility(View.INVISIBLE);
