@@ -2,6 +2,7 @@ package com.example.dictionary;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -22,7 +23,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -30,44 +30,21 @@ import java.util.HashMap;
 import java.util.List;
 
 
-/*
-* TODO:
-*   1)Сделать обработчик кнопки сброса
-*   2)Сделать меню выбора тренировки, удаления элементов и перемещения title
-*   3)Сделать layout для тренировки
-*
-* */
-
-
 public class MainActivity extends AppCompatActivity {
-
-    /* Checks if external storage is available for read and write */
-    boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-
-    /* Checks if external storage is available to at least read */
-    boolean isExternalStorageReadable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
-        }
-        return false;
-    }
 
     ExpandableListAdapter listAdapter;
     ExpandableListView expListView;
     List<String> listDataHeader;
     HashMap<String, List<String>> listDataChild;
-    List<XMLData.Category> full_data;
+    List<XMLData.Category> fullData;
     final int CHECK_STORAGE_PERMISSION = 1;
     final int CHECK_FILE_CHOSEN = 1;
+    final int OPEN_TEXT = 2;
+    final int OPEN_TRAINING = 3;
     boolean startAnotherActivity = false;
+    boolean categoryChange = false;
+    Context appContext;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,29 +74,32 @@ public class MainActivity extends AppCompatActivity {
 //        if(file3.exists())
 //            file3.delete();
 
-        expListView = (ExpandableListView) findViewById(R.id.group_items);//Связываемся с нашим ExpandableListView
+        expListView = findViewById(R.id.groupItems);//Связываемся с нашим ExpandableListView
         prepareListData();//Подготавливаем список данных
         listAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild);
         expListView.setAdapter(listAdapter);//Настраиваем listAdapter
+        appContext = this;
 
         expListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v,
                                         int groupPosition, int childPosition, long id) {
                 Log.i("my_logs_repeat", listDataHeader.get(groupPosition) + " repeated");
-                if (full_data.get(groupPosition).materials.get(childPosition).text == null) {
-                    full_data.set(groupPosition, XMLData.getXMLFileData(getApplicationContext(), groupPosition));
+                if (fullData.get(groupPosition).materials.get(childPosition).text == null) {
+                    fullData.set(groupPosition, XMLData.getXMLFileData(getApplicationContext(), groupPosition, listDataChild.get(listDataHeader.get(groupPosition))));
                 }
-                if (full_data.get(groupPosition).materials.get(childPosition).text != null) {
+                if (fullData.get(groupPosition).materials.get(childPosition).text != null) {
                     startAnotherActivity = true;
                     Intent intent = new Intent(MainActivity.this, MaterialActivity.class);
-                    intent.putExtra("category", listDataHeader.get(groupPosition));
-                    intent.putExtra("material_title", full_data.get(groupPosition).materials.get(childPosition).title);
-                    intent.putExtra("material_text", full_data.get(groupPosition).materials.get(childPosition).text);
-                    intent.putExtra("material_cnt_right", full_data.get(groupPosition).materials.get(childPosition).cnt_right);
-                    intent.putExtra("material_cnt_wrong", full_data.get(groupPosition).materials.get(childPosition).cnt_wrong);
+                    intent.putExtra("category", fullData.get(groupPosition).category);
+                    intent.putExtra("categoryIndex", groupPosition);
+                    intent.putExtra("materialIndex", childPosition);
+                    intent.putExtra("materialTitle", fullData.get(groupPosition).materials.get(childPosition).title);
+                    intent.putExtra("materialText", fullData.get(groupPosition).materials.get(childPosition).text);
+                    intent.putExtra("materialCntRight", fullData.get(groupPosition).materials.get(childPosition).cntRight);
+                    intent.putExtra("materialCntWrong", fullData.get(groupPosition).materials.get(childPosition).cntWrong);
                     Log.i("my_logs_start_activity", "Start repeat Activity");
-                    startActivity(intent);
+                    startActivityForResult(intent, OPEN_TEXT);
                 } else {
                     Toast.makeText(MainActivity.this, "Не удалось загрузить информацию", Toast.LENGTH_LONG).show();
                     Log.e("my_logs_chosen_title", "Could not find file");
@@ -128,30 +108,79 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         expListView.setOnItemLongClickListener(new ExpandableListView.OnItemLongClickListener() {
+
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 if (ExpandableListView.getPackedPositionType(id) == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
                     //лонгклик был на child'е
                     int groupPosition = ExpandableListView.getPackedPositionGroup(id);
                     int childPosition = ExpandableListView.getPackedPositionChild(id);
-                    Toast.makeText(
-                            getApplicationContext(), "Длинное нажатие: " +
-                                    listDataHeader.get(groupPosition)
-                                    + " : "
-                                    + listDataChild.get(
-                                    listDataHeader.get(groupPosition)).get(
-                                    childPosition), Toast.LENGTH_SHORT)
-                            .show();
+                    LayoutInflater li = LayoutInflater.from(appContext);
+                    View alertView = li.inflate(R.layout.template_alert_dialog, null);
+                    AlertDialog.Builder alert = new AlertDialog.Builder(appContext);
+                    alert.setTitle("Удалить этот материал?");
+                    alert.setView(alertView);
+                    alert.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            fullData.get(groupPosition).materials.remove(childPosition);
+                            listDataChild.get(fullData.get(groupPosition).category).remove(childPosition);
+                            fullData.get(groupPosition).actual = false;
+                            listAdapter = new ExpandableListAdapter(appContext, listDataHeader, listDataChild);
+                            expListView.setAdapter(listAdapter);//Настраиваем listAdapter
+                        }
+                    });
+                    alert.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+                    AlertDialog alertDialog = alert.create();
+                    alertDialog.show();
                     return true;
                 } else {
                     //лонгклик был на группе
                     int groupPosition = ExpandableListView.getPackedPositionGroup(id);
-                    Toast.makeText(
-                            getApplicationContext(), "Длинное нажатие: " +
-                                    listDataHeader.get(groupPosition), Toast.LENGTH_SHORT)
-                            .show();
+                    LayoutInflater li = LayoutInflater.from(appContext);
+                    View alertView = li.inflate(R.layout.template_alert_dialog, null);
+                    AlertDialog.Builder alert = new AlertDialog.Builder(appContext);
+                    alert.setTitle("Что нужно сделать?");
+                    alert.setView(alertView);
+                    alert.setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            fullData.remove(groupPosition);
+                            listDataChild.remove(listDataHeader.get(groupPosition));
+                            listDataHeader.remove(groupPosition);
+                            listAdapter = new ExpandableListAdapter(appContext, listDataHeader, listDataChild);
+                            expListView.setAdapter(listAdapter);
+                            categoryChange = true;
+                        }
+                    });
+                    alert.setNegativeButton("Тренировка", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            startAnotherActivity = true;
+                            Intent intent = new Intent(MainActivity.this, TrainingActivity.class);
+                            if (fullData.get(groupPosition).materials.get(0).text == null)
+                                fullData.set(groupPosition, XMLData.getXMLFileData(appContext, groupPosition, listDataChild.get(listDataHeader.get(groupPosition))));
+
+                            ArrayList<String> titlesList = new ArrayList<>(fullData.get(groupPosition).materials.size());
+                            ArrayList<String> textsList = new ArrayList<>(fullData.get(groupPosition).materials.size());
+                            for (int i = 0; i < fullData.get(groupPosition).materials.size(); i++) {
+                                titlesList.add(fullData.get(groupPosition).materials.get(i).title);
+                                textsList.add(fullData.get(groupPosition).materials.get(i).text);
+                            }
+                            intent.putExtra("titlesList", titlesList);
+                            intent.putExtra("textsList", textsList);
+                            intent.putExtra("categoryIndex", groupPosition);
+                            startActivityForResult(intent, OPEN_TRAINING);
+                        }
+                    });
+                    //Создаем AlertDialog:
+                    AlertDialog alertDialog = alert.create();
+                    alertDialog.show();
                     return true;
                 }
             }
@@ -159,14 +188,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
     @Override
     protected void onStop() {
-        if(!startAnotherActivity){
+        if (!startAnotherActivity) {
             Log.i("my_logs_stop", "Stop application");
-            XMLData.saveAllData(this,full_data);
-        }
-        else{
+            XMLData.saveAllData(this, fullData, categoryChange);
+
+        } else {
             Log.i("my_logs_stop", "Just another Activity");
             startAnotherActivity = false;
         }
@@ -193,103 +221,130 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case CHECK_FILE_CHOSEN:
                 if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+
                     String filename = data.getData().getLastPathSegment();
                     Log.i("my_logs_filename", "Filename: " + filename);
-                    String filepath = Environment.getExternalStorageDirectory().toString() +
-                            "/" + filename.substring(8);
+                    String filepath;
+                    filename = filename.substring(filename.indexOf(':') + 1);
+                    if (!filename.startsWith("/storage"))
+                        filepath = Environment.getExternalStorageDirectory().toString() +
+                                "/" + filename;
+                    else
+                        filepath = filename;
                     try {
                         InputStreamReader inputStream;
                         inputStream = new InputStreamReader(new FileInputStream(filepath));
-                        List<XMLData.Category> categories_list = XMLData.getXMLUserData(inputStream);
+                        List<XMLData.Category> categoriesList = XMLData.getXMLUserData(inputStream);
                         inputStream.close();
-                        if (categories_list == null)
+                        if (categoriesList == null)
                             throw new Exception("List is null");
-                        for (int i = 0; i < categories_list.size(); i++) {
-                            int idx_category = listDataHeader.indexOf(categories_list.get(i).category);
-                            if (idx_category == -1) {
-                                listDataHeader.add(categories_list.get(i).category);
-                                idx_category = listDataHeader.size() - 1;
+                        for (int i = 0; i < categoriesList.size(); i++) {
+                            int idxCategory = listDataHeader.indexOf(categoriesList.get(i).category);
+                            if (idxCategory == -1) {
+                                listDataHeader.add(categoriesList.get(i).category);
+                                idxCategory = listDataHeader.size() - 1;
                             }
-                            String category = listDataHeader.get(idx_category);
+                            String category = listDataHeader.get(idxCategory);
                             List<String> titles = new ArrayList<String>();
-                            for (int j = 0; j < categories_list.get(i).materials.size(); j++)
-                                titles.add(categories_list.get(i).materials.get(j).title);
+                            for (int j = 0; j < categoriesList.get(i).materials.size(); j++)
+                                titles.add(categoriesList.get(i).materials.get(j).title);
                             if (listDataChild.containsKey(category)) {
-                                if (full_data.get(idx_category).materials.size() == 0 ||
-                                        full_data.get(idx_category).materials.get(0).text == null)
-                                    full_data.set(idx_category, XMLData.getXMLFileData(this, idx_category));
+                                if (fullData.get(idxCategory).materials.size() == 0 ||
+                                        fullData.get(idxCategory).materials.get(0).text == null)
+                                    fullData.set(idxCategory, XMLData.getXMLFileData(this, idxCategory, listDataChild.get(category)));
                                 List<String> temp = listDataChild.get(category);
                                 temp.addAll(titles);
                                 listDataChild.put(category, temp);
-                                full_data.get(idx_category).materials.addAll(categories_list.get(i).materials);
-                                full_data.get(idx_category).actual = false;
+                                fullData.get(idxCategory).materials.addAll(categoriesList.get(i).materials);
+                                fullData.get(idxCategory).actual = false;
                             } else {
                                 listDataChild.put(category, titles);
-                                full_data.add(new XMLData.Category(category, categories_list.get(i).materials, full_data.size(), false));
-                                full_data.get(idx_category).prev_index_file = idx_category;
+                                fullData.add(new XMLData.Category(category, categoriesList.get(i).materials, fullData.size(), false));
+                                fullData.get(idxCategory).prevIndexFile = idxCategory;
                             }
-                            Log.i("my_logs_cnt_data", "full_data with category " + full_data.get(idx_category).category +
-                                    " have " + full_data.get(idx_category).materials.size() + " materials");
-                            //XMLData.putXMLFileData(this, full_data.get(idx_category), idx_category);
+                            Log.i("my_logs_cnt_data", "full_data with category " + fullData.get(idxCategory).category +
+                                    " have " + fullData.get(idxCategory).materials.size() + " materials");
                         }
                         listAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild);
                         expListView.setAdapter(listAdapter);//Настраиваем listAdapter
-                        //XMLData.putXMLMetaData(this, full_data);
                         Log.i("my_logs_menu", "Materials have added");
                     } catch (Exception e) {
-                        Toast.makeText(MainActivity.this, "Возникла ошибка", Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "Возникла проблема с файлом", Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
                 } else {
                     Log.e("my_logs_file", "Error with file");
                 }
                 break;
+            case OPEN_TEXT:
+                if (resultCode == RESULT_OK && data != null) {
+                    int categoryIndex = data.getIntExtra("categoryIndex", 0);
+                    int materialIndex = data.getIntExtra("materialIndex", 0);
+                    fullData.get(categoryIndex).materials.get(materialIndex).cntRight = data.getIntExtra("materialCntRight", 0);
+                    fullData.get(categoryIndex).materials.get(materialIndex).cntWrong = data.getIntExtra("materialCntWrong", 0);
+                    fullData.get(categoryIndex).actual = false;
+                } else {
+                    Log.e("my_logs_result", "Data error");
+                }
+                break;
+            case OPEN_TRAINING:
+                if (resultCode == RESULT_OK && data != null) {
+                    int categoryIndex = data.getIntExtra("categoryIndex", -1);
+                    ArrayList<Integer> cntRight = data.getIntegerArrayListExtra("cntRight");
+                    ArrayList<Integer> cntWrong = data.getIntegerArrayListExtra("cntWrong");
+                    for (int i = 0; i < fullData.get(categoryIndex).materials.size(); i++) {
+                        fullData.get(categoryIndex).materials.get(i).cntRight += cntRight.get(i);
+                        fullData.get(categoryIndex).materials.get(i).cntWrong += cntWrong.get(i);
+                    }
+                    fullData.get(categoryIndex).actual = false;
+                }
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
-
 
     private void prepareListData() {
         listDataHeader = new ArrayList<String>();
         listDataChild = new HashMap<String, List<String>>();
-        full_data = XMLData.getXMLMetaData(this);
-        for (int i = 0; i < full_data.size(); i++) {
-            listDataHeader.add(full_data.get(i).category);
-            List<String> material_title = new ArrayList<>(full_data.get(i).materials.size());
-            for (int j = 0; j < full_data.get(i).materials.size(); j++) {
-                material_title.add(full_data.get(i).materials.get(j).title);
+        fullData = XMLData.getXMLMetaData(this);
+        if (fullData == null)
+            return;
+        for (int i = 0; i < fullData.size(); i++) {
+            listDataHeader.add(fullData.get(i).category);
+            List<String> materialTitle = new ArrayList<>(fullData.get(i).materials.size());
+            for (int j = 0; j < fullData.get(i).materials.size(); j++) {
+                materialTitle.add(fullData.get(i).materials.get(j).title);
             }
-            listDataChild.put(listDataHeader.get(i), material_title);
+            listDataChild.put(listDataHeader.get(i), materialTitle);
         }
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.add_materials) {
+        if (item.getItemId() == R.id.addMaterials) {
             Log.i("my_logs_menu", "add_materials pressed");
             startAnotherActivity = true;
             Intent intent = new Intent();
-            intent.setType("text/xml");
+            intent.setType("*/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(intent, CHECK_FILE_CHOSEN);
-        } else if (item.getItemId() == R.id.add_group) {
+        } else if (item.getItemId() == R.id.addGroup) {
             Log.i("my_logs_menu", "add_group pressed");
             LayoutInflater li = LayoutInflater.from(this);
-            View alertView = li.inflate(R.layout.template_alert_dialog, null);
+            View alertView = li.inflate(R.layout.typing_alert_dialog, null);
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
             alert.setTitle("Название раздела");
             alert.setView(alertView);
-            final EditText input = alertView.findViewById(R.id.input_text);
+            final EditText input = alertView.findViewById(R.id.inputText);
 
             alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     String value = String.valueOf(input.getText());
                     if (!listDataChild.containsKey(value)) {
-                        full_data.add(new XMLData.Category(value, full_data.size(), false));
+                        fullData.add(new XMLData.Category(value, new ArrayList<>(), fullData.size(), false));
                         Log.i("my_logs_groups", "Group have been added");
                         listDataHeader.add(value);
                         listDataChild.put(value, new ArrayList<String>());
@@ -301,11 +356,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             alert.show();
-        } else if(item.getItemId() == R.id.support){
+        } else if (item.getItemId() == R.id.support) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Справка о загрузке материалов")
-                    .setMessage("Материалы загружаются с использованием XML-файлов\n" +
-                            "Иерархия тегов:\n" +
+                    .setMessage("1)Материалы загружаются с использованием XML-файлов\n\n" +
+                            "2)ВАЖНО! Файл выбирать через полный путь к нему, а не через вкладки, такие как \"Загрузка\" и т.п.\n\n" +
+                            "3)Иерархия тегов:\n" +
                             "<dictionary> - начало" +
                             "   <category>Название</category>\n" +
                             "   <material>\n" +
@@ -324,40 +380,4 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main_activity, menu);
         return true;
     }
-
-        /*but.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //if(isExternalStorageReadable())
-                //    Toast.makeText(MainActivity.this, "Readable", Toast.LENGTH_LONG).show();
-                //else
-                //    Toast.makeText(MainActivity.this, "Not readable", Toast.LENGTH_LONG).show();
-//
-                //if(isExternalStorageWritable())
-                //    Toast.makeText(MainActivity.this, "Writable", Toast.LENGTH_LONG).show();
-                //else
-                //    Toast.makeText(MainActivity.this, "Not writable", Toast.LENGTH_LONG).show();
-
-                Intent intent = new Intent();
-                intent.setType("text/plain");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(intent,PICKFILE_RESULT_CODE);
-
-                //String str = Environment.getExternalStorageDirectory().toString();
-                //Toast.makeText(MainActivity.this, str, Toast.LENGTH_LONG).show();
-               //try {
-               //    outputStream = openFileOutput(str, Context.MODE_PRIVATE);
-               //    outputStream.write(string.getBytes());
-               //    outputStream.close();
-               //} catch (Exception e) {
-               //    e.printStackTrace();
-               //}
-
-
-
-            }
-        });*/
-
-
 }

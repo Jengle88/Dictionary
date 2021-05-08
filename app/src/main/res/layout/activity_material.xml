@@ -21,7 +21,7 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/material_title"
+                android:id="@+id/materialTitle"
                 android:layout_width="450dp"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
@@ -33,71 +33,71 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/text_good_repeat"
+                android:id="@+id/textGoodRepeat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/material_title"
-                android:layout_alignStart="@id/material_title"
+                android:layout_below="@id/materialTitle"
+                android:layout_alignStart="@id/materialTitle"
                 android:layout_marginTop="10dp"
                 android:text="Успешных повторений: "
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/text_bad_repeat"
+                android:id="@+id/textBadRepeat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/text_good_repeat"
-                android:layout_alignStart="@id/material_title"
+                android:layout_below="@id/textGoodRepeat"
+                android:layout_alignStart="@id/materialTitle"
                 android:layout_marginTop="10dp"
                 android:text="Неудачных повторений: "
 
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/count_good_repeat"
+                android:id="@+id/countGoodRepeat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/material_title"
+                android:layout_below="@id/materialTitle"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
-                android:layout_toStartOf="@+id/reset_counts"
-                android:layout_toEndOf="@id/text_good_repeat"
+                android:layout_toStartOf="@+id/resetCounts"
+                android:layout_toEndOf="@id/textGoodRepeat"
                 android:singleLine="true"
                 android:text="0"
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/count_bad_repeat"
+                android:id="@+id/countBadRepeat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/count_good_repeat"
-                android:layout_alignStart="@id/count_good_repeat"
+                android:layout_below="@id/countGoodRepeat"
+                android:layout_alignStart="@id/countGoodRepeat"
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
-                android:layout_toStartOf="@+id/reset_counts"
+                android:layout_toStartOf="@+id/resetCounts"
                 android:singleLine="true"
                 android:text="0"
                 android:textSize="16sp" />
 
             <Button
-                android:id="@+id/reset_counts"
+                android:id="@+id/resetCounts"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_above="@+id/material_text"
-                android:layout_below="@id/material_title"
-                android:layout_alignEnd="@+id/material_title"
+                android:layout_above="@+id/materialText"
+                android:layout_below="@id/materialTitle"
+                android:layout_alignEnd="@+id/materialTitle"
                 android:layout_marginTop="10dp"
                 android:text="Сброс"
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/material_text"
+                android:id="@+id/materialText"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_below="@+id/count_bad_repeat"
-                android:layout_alignStart="@+id/material_title"
-                android:layout_alignEnd="@+id/material_title"
+                android:layout_below="@+id/countBadRepeat"
+                android:layout_alignStart="@+id/materialTitle"
+                android:layout_alignEnd="@+id/materialTitle"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="15dp"
                 android:text="Здесь будет текст"

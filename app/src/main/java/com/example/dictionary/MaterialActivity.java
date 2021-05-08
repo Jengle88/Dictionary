@@ -1,43 +1,49 @@
 package com.example.dictionary;
 
-import android.text.Layout;
-import android.text.method.ScrollingMovementMethod;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.RelativeLayout;
+import android.content.Intent;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
 public class MaterialActivity extends AppCompatActivity {
+    TextView materialTitle;
+    TextView materialText;
+    TextView countGoodRepeat;
+    TextView countBadRepeat;
+    Intent intent = new Intent();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_material);
-        TextView material_title = findViewById(R.id.material_title);
-        TextView material_text = findViewById(R.id.material_text);
-        TextView count_good_repeat = findViewById(R.id.count_good_repeat);
-        TextView count_bad_repeat = findViewById(R.id.count_bad_repeat);
-        material_title.setText(getIntent().getStringExtra("material_title"));
-        material_text.setText(getIntent().getStringExtra("material_text"));
-        count_good_repeat.setText(String.valueOf(getIntent().getIntExtra("material_cnt_right",0)));
-        count_bad_repeat.setText(String.valueOf(getIntent().getIntExtra("material_cnt_wrong",0)));
-
-       //Toast.makeText(this, getIntent().getStringExtra("category"), Toast.LENGTH_LONG).show();
-       //Toast.makeText(this, getIntent().getStringExtra("material"), Toast.LENGTH_LONG).show();
+        materialTitle = findViewById(R.id.materialTitle);
+        materialText = findViewById(R.id.materialText);
+        countGoodRepeat = findViewById(R.id.countGoodRepeat);
+        countBadRepeat = findViewById(R.id.countBadRepeat);
+        materialTitle.setText(getIntent().getStringExtra("materialTitle"));
+        materialText.setText(getIntent().getStringExtra("materialText"));
+        countGoodRepeat.setText(String.valueOf(getIntent().getIntExtra("materialCntRight", 0)));
+        countBadRepeat.setText(String.valueOf(getIntent().getIntExtra("materialCntWrong", 0)));
+        Button resetButton = findViewById(R.id.resetCounts);
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                countBadRepeat.setText("0");
+                countGoodRepeat.setText("0");
+            }
+        });
     }
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        return super.onOptionsItemSelected(item);
-    }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_material_activity, menu);
-        return true;
+    public void onBackPressed() {
+        intent.putExtra("materialCntRight", Integer.parseInt(countGoodRepeat.getText().toString()));
+        intent.putExtra("materialCntWrong", Integer.parseInt(countBadRepeat.getText().toString()));
+        intent.putExtra("categoryIndex", getIntent().getIntExtra("categoryIndex", 0));
+        intent.putExtra("materialIndex", getIntent().getIntExtra("materialIndex", 0));
+        setResult(RESULT_OK, intent);
+        super.onBackPressed();
     }
 
 }
